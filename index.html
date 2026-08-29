@@ -1081,14 +1081,15 @@
             .main { margin-left: 0; }
             .mobile-toggle { display: flex; align-items: center; justify-content: center; }
             .search-input input { width: 100%; }
-            .topbar { padding: 1rem; }
+            .topbar { padding: 1rem; flex-direction: column; align-items: flex-start; gap: 1rem; }
             .content { padding: 1rem; }
-            .topbar-actions { width: 100%; }
-            .search-input { flex: 1; }
+            .topbar-actions { width: 100%; flex-wrap: wrap; }
+            .search-input { flex: 1 1 100%; }
             .form-row { grid-template-columns: 1fr; }
             .stats-row { grid-template-columns: repeat(2, 1fr); }
             .loan-grid { grid-template-columns: 1fr; }
             .table-header { flex-direction: column; align-items: flex-start; }
+            th, td { white-space: nowrap; }
         }
 
         @media (max-width: 480px) {
@@ -1372,20 +1373,22 @@
             </div>
             
             <div class="table-container">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Fecha y Hora</th>
-                            <th>Equipo</th>
-                            <th>Sector</th>
-                            <th>Usuario</th>
-                            <th>Detalles / Procedimiento</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tbody-uso">
-                        <!-- rows -->
-                    </tbody>
-                </table>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Fecha y Hora</th>
+                                <th>Equipo</th>
+                                <th>Sector</th>
+                                <th>Usuario</th>
+                                <th>Detalles / Procedimiento</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-uso">
+                            <!-- rows -->
+                        </tbody>
+                    </table>
+                </div>
                 <div class="empty-state" id="empty-uso" style="display:none;">
                     <div class="empty-icon">📝</div>
                     <h3>No hay registros</h3>
