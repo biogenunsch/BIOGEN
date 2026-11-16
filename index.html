@@ -640,6 +640,27 @@
         .status-dot.disponible { background: var(--green); box-shadow: 0 0 6px var(--green); }
         .status-dot.prestado { background: var(--orange); box-shadow: 0 0 6px var(--orange); animation: pulse-dot 2s infinite; }
 
+        .cat-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            padding: 0.22rem 0.55rem;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .cat-chip.quimico { background: rgba(37, 99, 235, 0.08); color: #2563eb; border: 1px solid rgba(37, 99, 235, 0.2); }
+        .cat-chip.congeladora { background: rgba(6, 182, 212, 0.08); color: #0891b2; border: 1px solid rgba(6, 182, 212, 0.2); }
+        .cat-chip.kits { background: rgba(168, 85, 247, 0.08); color: #9333ea; border: 1px solid rgba(168, 85, 247, 0.2); }
+        .cat-chip.materiales { background: rgba(16, 185, 129, 0.08); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .cat-chip.otro { background: rgba(100, 116, 139, 0.08); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.2); }
+
+        .status-chip.en-uso { background: rgba(245, 158, 11, 0.1); color: #d97706; border: 1px solid rgba(245, 158, 11, 0.25); }
+        .status-chip.nuevo { background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); }
+        .status-chip.casi-nuevo { background: rgba(59, 130, 246, 0.1); color: #2563eb; border: 1px solid rgba(59, 130, 246, 0.25); }
+        .status-chip.agotado { background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); }
+
         @keyframes pulse-dot {
             0%, 100% { opacity: 1; }
             50% { opacity: 0.4; }
@@ -1163,7 +1184,7 @@
             <div class="nav-item active" data-page="resumen" onclick="switchPage('resumen')">
                 <span class="icon">📊</span> Resumen
             </div>
-            <div class="sidebar-section">Sectores</div>
+            <div class="sidebar-section">Equipos</div>
             <div class="nav-item" data-page="molecular" onclick="switchPage('molecular')">
                 <span class="icon">🧬</span> Molecular
                 <span class="badge" id="badge-molecular">0</span>
@@ -1175,6 +1196,19 @@
             <div class="nav-item" data-page="alimentarias" onclick="switchPage('alimentarias')">
                 <span class="icon">🍽️</span> Alimentarias
                 <span class="badge" id="badge-alimentarias">0</span>
+            </div>
+            <div class="sidebar-section">Reactivos e Insumos</div>
+            <div class="nav-item" data-page="reactivos-molecular" onclick="switchPage('reactivos-molecular')">
+                <span class="icon">🧪</span> Molecular (Reactivos)
+                <span class="badge" id="badge-reactivos-molecular">0</span>
+            </div>
+            <div class="nav-item" data-page="reactivos-tejidos" onclick="switchPage('reactivos-tejidos')">
+                <span class="icon">🧪</span> Tejidos (Reactivos)
+                <span class="badge" id="badge-reactivos-tejidos">0</span>
+            </div>
+            <div class="nav-item" data-page="reactivos-alimentarias" onclick="switchPage('reactivos-alimentarias')">
+                <span class="icon">🧪</span> Alimentarias (Reactivos)
+                <span class="badge" id="badge-reactivos-alimentarias">0</span>
             </div>
             <div class="sidebar-section">Gestión</div>
             <div class="nav-item" data-page="prestamos" onclick="switchPage('prestamos')">
@@ -1355,6 +1389,181 @@
             </div>
         </div>
 
+        <!-- ===== PAGE: REACTIVOS MOLECULAR ===== -->
+        <div class="page" id="page-reactivos-molecular">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h2>🧪 Reactivos — Biología Molecular</h2>
+                    <p>Inventario de reactivos químicos, kits, insumos y congeladora</p>
+                </div>
+                <div class="topbar-actions">
+                    <div class="search-input">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="search-reactivos-molecular" placeholder="Buscar reactivo, fórmula, ubicación..." oninput="renderReactivosSector('molecular')">
+                    </div>
+                    <select id="filter-cat-molecular" onchange="renderReactivosSector('molecular')" style="padding: 0.6rem 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); font-size: 0.85rem; color: var(--text);">
+                        <option value="">Todas las Categorías</option>
+                        <option value="Reactivo Químico">🧪 Reactivo Químico</option>
+                        <option value="Congeladora">❄️ Congeladora</option>
+                        <option value="Kits e Insumos">📦 Kits e Insumos</option>
+                        <option value="Materiales y Vidriería">🔬 Materiales y Vidriería</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="openAddReactivoModal('molecular')">✨ Nuevo Reactivo</button>
+                    <button class="btn btn-ghost" onclick="exportReactivosCSV('molecular')" title="Exportar CSV">📥 CSV</button>
+                    <button class="btn btn-ghost" onclick="forzarCargaReactivosMolecular()" title="Recargar lista inicial">🔄 Fichas</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Reactivos e Insumos — Molecular</h3>
+                        <span id="count-reactivos-molecular" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+                    </div>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Reactivo / Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Fórmula</th>
+                                    <th>P.M.</th>
+                                    <th>Forma</th>
+                                    <th>Cantidad</th>
+                                    <th>Estado</th>
+                                    <th>Ubicación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-reactivos-molecular"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="empty-reactivos-molecular" class="empty-state" style="display:none;">
+                    <div class="empty-icon">🧪</div>
+                    <h3>Sin reactivos en Molecular</h3>
+                    <p>Agrega reactivos o carga la lista de 86 ítems de las fichas</p>
+                    <div style="display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem; flex-wrap: wrap;">
+                        <button class="btn btn-primary" onclick="openAddReactivoModal('molecular')">✨ Agregar Reactivo</button>
+                        <button class="btn btn-success" onclick="forzarCargaReactivosMolecular()">📥 Cargar 86 Reactivos de Fichas</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PAGE: REACTIVOS TEJIDOS ===== -->
+        <div class="page" id="page-reactivos-tejidos">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h2>🧪 Reactivos — Cultivo de Tejidos</h2>
+                    <p>Medios de cultivo, reguladores de crecimiento, sales y reactivos</p>
+                </div>
+                <div class="topbar-actions">
+                    <div class="search-input">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="search-reactivos-tejidos" placeholder="Buscar reactivo, fórmula, ubicación..." oninput="renderReactivosSector('tejidos')">
+                    </div>
+                    <select id="filter-cat-tejidos" onchange="renderReactivosSector('tejidos')" style="padding: 0.6rem 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); font-size: 0.85rem; color: var(--text);">
+                        <option value="">Todas las Categorías</option>
+                        <option value="Reactivo Químico">🧪 Reactivo Químico</option>
+                        <option value="Congeladora">❄️ Congeladora</option>
+                        <option value="Kits e Insumos">📦 Kits e Insumos</option>
+                        <option value="Materiales y Vidriería">🔬 Materiales y Vidriería</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="openAddReactivoModal('tejidos')">✨ Nuevo Reactivo</button>
+                    <button class="btn btn-ghost" onclick="exportReactivosCSV('tejidos')" title="Exportar CSV">📥 CSV</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Reactivos e Insumos — Cultivo de Tejidos</h3>
+                        <span id="count-reactivos-tejidos" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+                    </div>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Reactivo / Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Fórmula</th>
+                                    <th>P.M.</th>
+                                    <th>Forma</th>
+                                    <th>Cantidad</th>
+                                    <th>Estado</th>
+                                    <th>Ubicación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-reactivos-tejidos"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="empty-reactivos-tejidos" class="empty-state" style="display:none;">
+                    <div class="empty-icon">🧫</div>
+                    <h3>Sin reactivos en Cultivo de Tejidos</h3>
+                    <p>Agrega los reactivos y medios de cultivo de este sector</p>
+                    <button class="btn btn-primary" onclick="openAddReactivoModal('tejidos')">✨ Agregar Reactivo</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PAGE: REACTIVOS ALIMENTARIAS ===== -->
+        <div class="page" id="page-reactivos-alimentarias">
+            <div class="topbar">
+                <div class="topbar-left">
+                    <h2>🧪 Reactivos — Alimentarias</h2>
+                    <p>Reactivos, soluciones estándar e insumos de análisis de alimentos</p>
+                </div>
+                <div class="topbar-actions">
+                    <div class="search-input">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="search-reactivos-alimentarias" placeholder="Buscar reactivo, fórmula, ubicación..." oninput="renderReactivosSector('alimentarias')">
+                    </div>
+                    <select id="filter-cat-alimentarias" onchange="renderReactivosSector('alimentarias')" style="padding: 0.6rem 0.8rem; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg-card); font-size: 0.85rem; color: var(--text);">
+                        <option value="">Todas las Categorías</option>
+                        <option value="Reactivo Químico">🧪 Reactivo Químico</option>
+                        <option value="Congeladora">❄️ Congeladora</option>
+                        <option value="Kits e Insumos">📦 Kits e Insumos</option>
+                        <option value="Materiales y Vidriería">🔬 Materiales y Vidriería</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="openAddReactivoModal('alimentarias')">✨ Nuevo Reactivo</button>
+                    <button class="btn btn-ghost" onclick="exportReactivosCSV('alimentarias')" title="Exportar CSV">📥 CSV</button>
+                </div>
+            </div>
+            <div class="content">
+                <div class="table-container">
+                    <div class="table-header">
+                        <h3>Reactivos e Insumos — Alimentarias</h3>
+                        <span id="count-reactivos-alimentarias" style="font-size: 0.8rem; color: var(--text-muted);"></span>
+                    </div>
+                    <div class="table-scroll">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Reactivo / Descripción</th>
+                                    <th>Categoría</th>
+                                    <th>Fórmula</th>
+                                    <th>P.M.</th>
+                                    <th>Forma</th>
+                                    <th>Cantidad</th>
+                                    <th>Estado</th>
+                                    <th>Ubicación</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-reactivos-alimentarias"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="empty-reactivos-alimentarias" class="empty-state" style="display:none;">
+                    <div class="empty-icon">🍽️</div>
+                    <h3>Sin reactivos en Alimentarias</h3>
+                    <p>Agrega los reactivos y soluciones de este sector</p>
+                    <button class="btn btn-primary" onclick="openAddReactivoModal('alimentarias')">✨ Agregar Reactivo</button>
+                </div>
+            </div>
+        </div>
+
         <!-- ===== PAGE: PRESTAMOS ===== -->
         <div class="page" id="page-prestamos">
             <div class="topbar">
@@ -1506,6 +1715,91 @@
         </div>
     </div>
 
+    <!-- MODAL: REACTIVO -->
+    <div class="modal-overlay" id="modal-reactivo">
+        <div class="modal">
+            <div class="modal-header">
+                <h2 id="modal-reactivo-title">✨ Nuevo Reactivo / Insumo</h2>
+                <button class="modal-close" onclick="closeModal('modal-reactivo')">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="reactivo-id">
+                <div class="form-group">
+                    <label>Nombre del Reactivo / Insumo <span class="required">*</span></label>
+                    <input type="text" id="reactivo-nombre" placeholder="Ej: Acido Clorhidrico, Green PCR Master Mix, Agarosa...">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Sector <span class="required">*</span></label>
+                        <select id="reactivo-sector">
+                            <option value="molecular">🧬 Molecular</option>
+                            <option value="tejidos">🧫 Cultivo de Tejidos</option>
+                            <option value="alimentarias">🍽️ Alimentarias</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Categoría</label>
+                        <select id="reactivo-categoria">
+                            <option value="Reactivo Químico">🧪 Reactivo Químico</option>
+                            <option value="Congeladora">❄️ Congeladora</option>
+                            <option value="Kits e Insumos">📦 Kits e Insumos</option>
+                            <option value="Materiales y Vidriería">🔬 Materiales y Vidriería</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Fórmula Química (Opcional)</label>
+                        <input type="text" id="reactivo-formula" placeholder="Ej: HCl, NaHCO3, CHCl3">
+                    </div>
+                    <div class="form-group">
+                        <label>Peso Molecular (Opcional)</label>
+                        <input type="text" id="reactivo-peso" placeholder="Ej: 36.46 g/mol">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Forma / Presentación</label>
+                        <input type="text" id="reactivo-forma" placeholder="Ej: Líquido, Polvo, Granulado, Pack...">
+                    </div>
+                    <div class="form-group">
+                        <label>Cantidad</label>
+                        <input type="number" id="reactivo-cantidad" placeholder="1" min="0" step="any" value="1">
+                    </div>
+                    <div class="form-group">
+                        <label>Unidad</label>
+                        <input type="text" id="reactivo-unidad" placeholder="frasco, unidad, pack, ml, g...">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="reactivo-estado">
+                            <option value="En uso">🟡 En uso</option>
+                            <option value="Nuevo">🟢 Nuevo / Sellado</option>
+                            <option value="Casi nuevo">🔵 Casi nuevo</option>
+                            <option value="Operativo">✅ Operativo / Disponible</option>
+                            <option value="Agotado">🔴 Agotado / Por reponer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Ubicación / Almacenamiento</label>
+                        <input type="text" id="reactivo-ubicacion" placeholder="Ej: Gabinete Químicos, Congeladora, Estante 2...">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Observaciones</label>
+                    <textarea id="reactivo-observaciones" placeholder="Lote, notas, proveedor, etc..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('modal-reactivo')">Cancelar</button>
+                <button class="btn btn-primary" onclick="saveReactivo()">💾 Guardar Reactivo</button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL: PRESTAMO -->
     <div class="modal-overlay" id="modal-prestamo">
         <div class="modal">
@@ -1631,6 +1925,8 @@
 
         // Escuchar estado de sesión
         let unsubscribeSnapshot = null;
+        let unsubscribeUsos = null;
+        let unsubscribeReactivos = null;
 
         if (auth) {
             auth.onAuthStateChanged((user) => {
@@ -1643,13 +1939,15 @@
                     overlay.classList.remove('hidden');
                     document.getElementById('current-user-email').textContent = 'Cargando...';
                     if (unsubscribeSnapshot) { unsubscribeSnapshot(); }
+                    if (unsubscribeUsos) { unsubscribeUsos(); }
+                    if (unsubscribeReactivos) { unsubscribeReactivos(); }
                     window.equipos = [];
+                    window.reactivos = [];
+                    window.usoLogs = [];
                     if (typeof refreshAll === 'function') refreshAll();
                 }
             });
         }
-        
-        let unsubscribeUsos = null;
 
         function initRealtimeSync() {
             if (!db) return;
@@ -1672,6 +1970,20 @@
             }, (error) => {
                 console.error("Error sincronizando usos:", error);
                 toast("Error Firebase Usos: " + error.message, "error");
+            });
+
+            unsubscribeReactivos = db.collection("reactivos").onSnapshot((snapshot) => {
+                window.reactivos = [];
+                snapshot.forEach((doc) => {
+                    window.reactivos.push({ id: doc.id, ...doc.data() });
+                });
+                if (typeof refreshAll === 'function') refreshAll();
+                if (typeof checkAndSeedMolecularReactivos === 'function') {
+                    checkAndSeedMolecularReactivos();
+                }
+            }, (error) => {
+                console.error("Error sincronizando reactivos:", error);
+                toast("Error Firebase Reactivos: " + error.message, "error");
             });
         }
 
@@ -1719,12 +2031,57 @@
             }
         };
 
+        window.saveReactivoToDB = async function(data, id) {
+            if (!db) return false;
+            try {
+                if (id) {
+                    await db.collection("reactivos").doc(id).update(data);
+                    toast('Reactivo actualizado');
+                } else {
+                    await db.collection("reactivos").add(data);
+                    toast('Reactivo agregado');
+                }
+                return true;
+            } catch (error) {
+                console.error("Error al guardar reactivo:", error);
+                toast('Error al guardar reactivo', 'error');
+                return false;
+            }
+        };
+
+        window.deleteReactivoFromDB = async function(id) {
+            if (!db) return false;
+            try {
+                await db.collection("reactivos").doc(id).delete();
+                toast('Reactivo eliminado', 'warning');
+                return true;
+            } catch (error) {
+                console.error("Error al eliminar reactivo:", error);
+                toast('Error al eliminar', 'error');
+                return false;
+            }
+        };
+
+        window.updateReactivoInDB = async function(id, dataToUpdate, successMessage) {
+            if (!db) return false;
+            try {
+                await db.collection("reactivos").doc(id).update(dataToUpdate);
+                toast(successMessage);
+                return true;
+            } catch (error) {
+                console.error("Error al actualizar reactivo:", error);
+                toast('Error al actualizar', 'error');
+                return false;
+            }
+        };
+
     </script>
 
     <!-- UI Logic Script -->
     <script>
     // ===== DATA =====
     window.equipos = [];
+    window.reactivos = [];
     window.usoLogs = [];
     let sortState = { field: 'nombre', asc: true };
     let confirmCallback = null;
@@ -1759,11 +2116,13 @@
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
         document.getElementById('page-' + page).classList.add('active');
-        document.querySelector(`[data-page="${page}"]`).classList.add('active');
+        const navItem = document.querySelector(`[data-page="${page}"]`);
+        if (navItem) navItem.classList.add('active');
         closeSidebar();
         if (page === 'resumen') renderResumen();
         else if (page === 'prestamos') renderPrestamos();
         else if (page === 'uso') window.renderUso();
+        else if (page.startsWith('reactivos-')) renderReactivosSector(page.replace('reactivos-', ''));
         else renderSector(page);
     }
 
@@ -2006,13 +2365,16 @@
         const tej = window.equipos.filter(e => e.sector === 'tejidos').length;
         const ali = window.equipos.filter(e => e.sector === 'alimentarias').length;
         const pre = window.equipos.filter(e => e.prestamo).length;
+        const rTotal = (window.reactivos || []).length;
+        const rMol = (window.reactivos || []).filter(r => r.sector === 'molecular').length;
 
         document.getElementById('stats-row').innerHTML = `
             <div class="stat-card total"><div class="stat-glow"></div><div class="stat-icon">📦</div><div class="stat-value">${window.equipos.length}</div><div class="stat-label">Total Equipos</div></div>
-            <div class="stat-card molecular"><div class="stat-glow"></div><div class="stat-icon">🧬</div><div class="stat-value">${mol}</div><div class="stat-label">Molecular</div></div>
-            <div class="stat-card tejidos"><div class="stat-glow"></div><div class="stat-icon">🧫</div><div class="stat-value">${tej}</div><div class="stat-label">Cultivo de Tejidos</div></div>
-            <div class="stat-card alimentarias"><div class="stat-glow"></div><div class="stat-icon">🍽️</div><div class="stat-value">${ali}</div><div class="stat-label">Alimentarias</div></div>
+            <div class="stat-card molecular"><div class="stat-glow"></div><div class="stat-icon">🧬</div><div class="stat-value">${mol}</div><div class="stat-label">Eq. Molecular</div></div>
+            <div class="stat-card tejidos"><div class="stat-glow"></div><div class="stat-icon">🧫</div><div class="stat-value">${tej}</div><div class="stat-label">Eq. Tejidos</div></div>
+            <div class="stat-card alimentarias"><div class="stat-glow"></div><div class="stat-icon">🍽️</div><div class="stat-value">${ali}</div><div class="stat-label">Eq. Alimentarias</div></div>
             <div class="stat-card prestamos"><div class="stat-glow"></div><div class="stat-icon">📤</div><div class="stat-value">${pre}</div><div class="stat-label">En Préstamo</div></div>
+            <div class="stat-card total" style="cursor:pointer;" onclick="switchPage('reactivos-molecular')"><div class="stat-glow"></div><div class="stat-icon">🧪</div><div class="stat-value">${rTotal}</div><div class="stat-label">Reactivos e Insumos (${rMol} Mol)</div></div>
         `;
     }
 
@@ -2138,12 +2500,20 @@
         document.getElementById('badge-tejidos').textContent = window.equipos.filter(e => e.sector==='tejidos').length;
         document.getElementById('badge-alimentarias').textContent = window.equipos.filter(e => e.sector==='alimentarias').length;
         document.getElementById('badge-prestamos').textContent = window.equipos.filter(e => e.prestamo).length;
+
+        const bRM = document.getElementById('badge-reactivos-molecular');
+        if (bRM) bRM.textContent = (window.reactivos || []).filter(r => r.sector === 'molecular').length;
+        const bRT = document.getElementById('badge-reactivos-tejidos');
+        if (bRT) bRT.textContent = (window.reactivos || []).filter(r => r.sector === 'tejidos').length;
+        const bRA = document.getElementById('badge-reactivos-alimentarias');
+        if (bRA) bRA.textContent = (window.reactivos || []).filter(r => r.sector === 'alimentarias').length;
     }
 
     window.refreshAll = function() {
         updateBadges();
         renderResumen();
         ['molecular','tejidos','alimentarias'].forEach(renderSector);
+        ['molecular','tejidos','alimentarias'].forEach(renderReactivosSector);
         renderPrestamos();
     }
 
@@ -2165,6 +2535,328 @@
         a.click(); URL.revokeObjectURL(a.href);
         toast('CSV exportado');
     }
+
+    // ===== REACTIVOS INITIAL DATA (86 ÍTEMS DE BIOLOGÍA MOLECULAR) =====
+    const INITIAL_REACTIVOS_MOLECULAR = [
+        // Ficha 1: Reactivos Químicos
+        { nombre: "Acido Clorhidrico", sector: "molecular", categoria: "Reactivo Químico", formula: "HCl", pesoMolecular: "36.46 g/mol", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°1" },
+        { nombre: "Acido Etilendiamino Tetraacetico (EDTA)", sector: "molecular", categoria: "Reactivo Químico", formula: "C10H16N2O8", pesoMolecular: "292.24 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°2" },
+        { nombre: "Alcohol Isoamilico", sector: "molecular", categoria: "Reactivo Químico", formula: "C5H12O", pesoMolecular: "88.15 g/mol", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°3" },
+        { nombre: "Alcohol Isoamilico (Frasco 2)", sector: "molecular", categoria: "Reactivo Químico", formula: "C5H12O", pesoMolecular: "88.15 g/mol", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°4" },
+        { nombre: "Alcohol Isoamilico (Sellado)", sector: "molecular", categoria: "Reactivo Químico", formula: "C5H12O", pesoMolecular: "88.15 g/mol", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "Nuevo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°5" },
+        { nombre: "Anaranjado G", sector: "molecular", categoria: "Reactivo Químico", formula: "C16H10N2Na2O7S2", pesoMolecular: "", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°6" },
+        { nombre: "Bicarbonato de Sodio", sector: "molecular", categoria: "Reactivo Químico", formula: "NaHCO3", pesoMolecular: "84.0 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°7" },
+        { nombre: "Cloroformo", sector: "molecular", categoria: "Reactivo Químico", formula: "CHCl3", pesoMolecular: "119.38 g/mol", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°8" },
+        { nombre: "Cloruro de Sodio (Hidratado)", sector: "molecular", categoria: "Reactivo Químico", formula: "NaCl.2H2O", pesoMolecular: "58.44 g/mol", forma: "Granulado", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°9" },
+        { nombre: "Eosina", sector: "molecular", categoria: "Reactivo Químico", formula: "C20H8Br4O5", pesoMolecular: "745.90 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°10" },
+        { nombre: "Orceina", sector: "molecular", categoria: "Reactivo Químico", formula: "C28H24N2O7", pesoMolecular: "500.51 g/mol", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°11" },
+        { nombre: "Orceina", sector: "molecular", categoria: "Reactivo Químico", formula: "C28H24N2O7", pesoMolecular: "500.51 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°12" },
+        { nombre: "Verde Jamus", sector: "molecular", categoria: "Reactivo Químico", formula: "C30H31N6Cl", pesoMolecular: "", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°13" },
+        { nombre: "Xilol", sector: "molecular", categoria: "Reactivo Químico", formula: "C8H10", pesoMolecular: "106.16 g/mol", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°14" },
+        { nombre: "Poliacrilamida 6%", sector: "molecular", categoria: "Reactivo Químico", formula: "(C3H5NO)n", pesoMolecular: "", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°15" },
+        { nombre: "Poliacrilamida 6% (Frasco 2)", sector: "molecular", categoria: "Reactivo Químico", formula: "(C3H5NO)n", pesoMolecular: "", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°16" },
+        { nombre: "Solucion de fijacion", sector: "molecular", categoria: "Reactivo Químico", formula: "", pesoMolecular: "", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°17" },
+        { nombre: "TBE 0.5 X", sector: "molecular", categoria: "Reactivo Químico", formula: "", pesoMolecular: "", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Buffer TBE - Ficha 1 N°18" },
+        { nombre: "TBE (desconocido)", sector: "molecular", categoria: "Reactivo Químico", formula: "", pesoMolecular: "", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°19" },
+        { nombre: "Solucion de tincion (AgNO3)", sector: "molecular", categoria: "Reactivo Químico", formula: "AgNO3", pesoMolecular: "", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Nitrato de Plata - Ficha 1 N°20" },
+        { nombre: "Solucion revelador", sector: "molecular", categoria: "Reactivo Químico", formula: "", pesoMolecular: "", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°21" },
+        { nombre: "Acido clorhidrico 0.097 N", sector: "molecular", categoria: "Reactivo Químico", formula: "HCl", pesoMolecular: "", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°22" },
+        { nombre: "Azul de bromotimol", sector: "molecular", categoria: "Reactivo Químico", formula: "C27H28Br2O5S", pesoMolecular: "624.38 g/mol", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°23" },
+        { nombre: "Urea comercial", sector: "molecular", categoria: "Reactivo Químico", formula: "CH4N2O", pesoMolecular: "", forma: "Granulado", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 1 N°24" },
+
+        // Ficha 2: Reactivos Químicos
+        { nombre: "Acido Borico", sector: "molecular", categoria: "Reactivo Químico", formula: "H3BO3", pesoMolecular: "61.83 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "Operativo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°1" },
+        { nombre: "Bromuro de Cetiltrimetilamonio (CTAB)", sector: "molecular", categoria: "Reactivo Químico", formula: "C19H42BrN", pesoMolecular: "364.45 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "Casi nuevo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°2" },
+        { nombre: "Bromuro de Cetiltrimetilamonio (CTAB)", sector: "molecular", categoria: "Reactivo Químico", formula: "C19H42BrN", pesoMolecular: "364.45 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°3" },
+        { nombre: "Metanol", sector: "molecular", categoria: "Reactivo Químico", formula: "CH3OH", pesoMolecular: "32.04 g/mol", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "Nuevo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°4" },
+        { nombre: "Metanol (Frasco 2)", sector: "molecular", categoria: "Reactivo Químico", formula: "CH3OH", pesoMolecular: "32.04 g/mol", forma: "Liquido", cantidad: 1, unidad: "frasco", estado: "Nuevo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°5" },
+        { nombre: "Tris Base", sector: "molecular", categoria: "Reactivo Químico", formula: "C4H11NO3", pesoMolecular: "121.14 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°6" },
+        { nombre: "Tris Base (Frasco 2)", sector: "molecular", categoria: "Reactivo Químico", formula: "C4H11NO3", pesoMolecular: "121.14 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "En uso", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°7" },
+        { nombre: "Acetato de potasio", sector: "molecular", categoria: "Reactivo Químico", formula: "CH3COOK", pesoMolecular: "98.15 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "Operativo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°8" },
+        { nombre: "Agarosa", sector: "molecular", categoria: "Reactivo Químico", formula: "", pesoMolecular: "", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "Operativo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°9" },
+        { nombre: "Acrilamida (Frasco 1)", sector: "molecular", categoria: "Reactivo Químico", formula: "C3H5NO", pesoMolecular: "71.08 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "Operativo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°10" },
+        { nombre: "Acrilamida (Frasco 2)", sector: "molecular", categoria: "Reactivo Químico", formula: "C3H5NO", pesoMolecular: "71.08 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "Operativo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°11" },
+        { nombre: "Acrilamida (Frasco 3)", sector: "molecular", categoria: "Reactivo Químico", formula: "C3H5NO", pesoMolecular: "71.08 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "Operativo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°12" },
+        { nombre: "Bisacrilamida", sector: "molecular", categoria: "Reactivo Químico", formula: "C7H10N2O2", pesoMolecular: "154.17 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "Operativo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°13" },
+        { nombre: "Urea", sector: "molecular", categoria: "Reactivo Químico", formula: "CH4N2O", pesoMolecular: "60.06 g/mol", forma: "Polvo", cantidad: 1, unidad: "frasco", estado: "Operativo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°14" },
+        { nombre: "Acetato de sodio trihidratado", sector: "molecular", categoria: "Reactivo Químico", formula: "C2H3NaO2·3H2O", pesoMolecular: "136.08 g/mol", forma: "Granulado", cantidad: 1, unidad: "frasco", estado: "Operativo", ubicacion: "Gabinete Químicos", observaciones: "Ficha 2 N°15" },
+
+        // Ficha Otros: Kits e Insumos
+        { nombre: "Mini kit de purificador de ADN", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Kit / Pack", cantidad: 2, unidad: "pack", estado: "En uso", ubicacion: "Estante Kits", observaciones: "Otros N°1" },
+        { nombre: "Mini kit de purificador de ADN", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Kit / Pack", cantidad: 2, unidad: "pack", estado: "Nuevo", ubicacion: "Estante Kits", observaciones: "Otros N°2" },
+        { nombre: "Mini kit de gel de extraccion", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Kit / Pack", cantidad: 2, unidad: "pack", estado: "En uso", ubicacion: "Estante Kits", observaciones: "Otros N°3" },
+        { nombre: "Mini kit de gel de extraccion", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Kit / Pack", cantidad: 2, unidad: "pack", estado: "Nuevo", ubicacion: "Estante Kits", observaciones: "Otros N°4" },
+        { nombre: "Placa de reaccion", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Placa", cantidad: 2, unidad: "pack", estado: "Nuevo", ubicacion: "Estante Kits", observaciones: "Otros N°5" },
+        { nombre: "Placa de reaccion", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Placa", cantidad: 1, unidad: "pack", estado: "En uso", ubicacion: "Estante Kits", observaciones: "Otros N°6" },
+        { nombre: "Microamp PCR blocks", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Block", cantidad: 1, unidad: "pack", estado: "En uso", ubicacion: "Estante Kits", observaciones: "Otros N°7" },
+        { nombre: "Microamp base", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Base", cantidad: 1, unidad: "pack", estado: "Nuevo", ubicacion: "Estante Kits", observaciones: "Otros N°8" },
+        { nombre: "Microamp strip", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Strip", cantidad: 1, unidad: "pack", estado: "En uso", ubicacion: "Estante Kits", observaciones: "Otros N°9" },
+        { nombre: "Kit de microplacas", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Placas", cantidad: 1, unidad: "paquete", estado: "Operativo", ubicacion: "Estante Kits", observaciones: "Otros N°10" },
+        { nombre: "Kit de aislamiento (virus) amarillo", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Kit", cantidad: 1, unidad: "paquete", estado: "Operativo", ubicacion: "Estante Kits", observaciones: "Otros N°11" },
+        { nombre: "Purificacion de RNA mini kit", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Kit / Pack", cantidad: 2, unidad: "pack", estado: "En uso", ubicacion: "Estante Kits", observaciones: "Otros N°12" },
+        { nombre: "Thermo scientific Gene Jet PCR purificador kit", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Kit", cantidad: 1, unidad: "pack", estado: "Operativo", ubicacion: "Estante Kits", observaciones: "Otros N°13" },
+        { nombre: "Microamp cinta adhesiva", sector: "molecular", categoria: "Kits e Insumos", formula: "", pesoMolecular: "", forma: "Cinta", cantidad: 1, unidad: "pack", estado: "Operativo", ubicacion: "Estante Kits", observaciones: "Otros N°14" },
+
+        // Ficha Materiales e Insumos
+        { nombre: "Cajas azules grandes", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Caja", cantidad: 3, unidad: "unidades", estado: "Operativo", ubicacion: "Estante", observaciones: "Materiales N°1" },
+        { nombre: "Cajas para tips pequeños (2 negros, 1 azul)", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Caja", cantidad: 3, unidad: "unidades", estado: "Operativo", ubicacion: "Estante", observaciones: "Materiales N°2" },
+        { nombre: "Caja larga amarillo", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Caja", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Estante", observaciones: "Materiales N°3" },
+        { nombre: "Caja con tip pequeños (amarillo)", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Caja", cantidad: 1, unidad: "unidad", estado: "En uso", ubicacion: "Estante", observaciones: "Materiales N°4" },
+        { nombre: "Caja con tip pequeños (amarillo)", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Caja", cantidad: 1, unidad: "unidad", estado: "Nuevo", ubicacion: "Estante", observaciones: "Materiales N°5" },
+        { nombre: "Cajas para tips pequeños (negros de 0.5-10 ul)", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Caja", cantidad: 4, unidad: "unidad", estado: "Operativo", ubicacion: "Estante", observaciones: "Materiales N°6" },
+        { nombre: "Cajas transparentes, 1 cuadrado y 1 porta tips", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Caja", cantidad: 2, unidad: "unidad", estado: "Operativo", ubicacion: "Estante", observaciones: "Materiales N°7" },
+        { nombre: "Contenedor naranja cuadros grande", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Contenedor", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Estante", observaciones: "Materiales N°8" },
+        { nombre: "Contenedores pequeños", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Contenedor", cantidad: 2, unidad: "unidad", estado: "Operativo", ubicacion: "Estante", observaciones: "Materiales N°9" },
+        { nombre: "Soporte de tubo centrifuga PCR", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Soporte", cantidad: 2, unidad: "unidad", estado: "Operativo", ubicacion: "Estante", observaciones: "Materiales N°10" },
+        { nombre: "Microplaca de 96 pozas (con base azul)", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Placa", cantidad: 7, unidad: "unidad", estado: "Operativo", ubicacion: "Estante", observaciones: "Materiales N°11" },
+        { nombre: "Piseta", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Frasco", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Mesa / Estante", observaciones: "Materiales N°12" },
+        { nombre: "Fiola", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Vidrio", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Mesa / Estante", observaciones: "Materiales N°13" },
+        { nombre: "Vaso de precipitado pequeño", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Vidrio", cantidad: 4, unidad: "unidad", estado: "Operativo", ubicacion: "Mesa / Estante", observaciones: "Materiales N°14" },
+        { nombre: "Probeta de 10 ml", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Vidrio", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Mesa / Estante", observaciones: "Materiales N°15" },
+        { nombre: "Micropipeta de 100 ul", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Instrumento", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Mesa de trabajo", observaciones: "Materiales N°16" },
+        { nombre: "Micropipeta de 100 ul (Equipo 2)", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Instrumento", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Mesa de trabajo", observaciones: "Materiales N°17" },
+        { nombre: "Micropipeta de 1000 ul", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Instrumento", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Mesa de trabajo", observaciones: "Materiales N°18" },
+        { nombre: "Gafas protectoras", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Protección EPP", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Estante EPP", observaciones: "Materiales N°19" },
+        { nombre: "Lentes de seguridad", sector: "molecular", categoria: "Materiales y Vidriería", formula: "", pesoMolecular: "", forma: "Protección EPP", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Estante EPP", observaciones: "Materiales N°20" },
+
+        // Ficha CONGELADORA
+        { nombre: "HRM Calibration Standar 20x", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Solución", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Congeladora", observaciones: "Congeladora N°1" },
+        { nombre: "Syber Dye 20x", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Solución fluorescente", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Congeladora", observaciones: "SYBR Green / Dye - Congeladora N°2" },
+        { nombre: "Positive control kit", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Kit", cantidad: 1, unidad: "unidad", estado: "Nuevo", ubicacion: "Congeladora", observaciones: "Congeladora N°3" },
+        { nombre: "Reagents started kit (50 reactivos)", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Kit", cantidad: 2, unidad: "unidad", estado: "En uso", ubicacion: "Congeladora", observaciones: "Congeladora N°4" },
+        { nombre: "Matrix standar (installato standar, matrix standard, terminator)", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Estándar", cantidad: 3, unidad: "unidad", estado: "Operativo", ubicacion: "Congeladora", observaciones: "Congeladora N°5" },
+        { nombre: "Green PCR Master Mix", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Master Mix", cantidad: 2, unidad: "unidad", estado: "Operativo", ubicacion: "Congeladora", observaciones: "Congeladora N°6" },
+        { nombre: "Universal PCR master mix No ampPrase", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Master Mix", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Congeladora", observaciones: "Congeladora N°7" },
+        { nombre: "One step RT-PCR master mix Reagents", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Master Mix", cantidad: 3, unidad: "pack", estado: "Nuevo", ubicacion: "Congeladora", observaciones: "Congeladora N°8" },
+        { nombre: "Installation Standard DS-33", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Estándar", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Congeladora", observaciones: "Congeladora N°9" },
+        { nombre: "Matrix standard set DS-33", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Estándar", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Congeladora", observaciones: "Congeladora N°10" },
+        { nombre: "Matrix Standard kit", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Kit", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Congeladora", observaciones: "Congeladora N°11" },
+        { nombre: "HRM Calibration plate", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Placa calibración", cantidad: 1, unidad: "unidad", estado: "Operativo", ubicacion: "Congeladora", observaciones: "Congeladora N°12" },
+        { nombre: "Real-Time PCR System spectral calibration kit", sector: "molecular", categoria: "Congeladora", formula: "", pesoMolecular: "", forma: "Kit calibración", cantidad: 3, unidad: "pack", estado: "Operativo", ubicacion: "Congeladora", observaciones: "Congeladora N°13" }
+    ];
+
+    // ===== REACTIVOS CRUD & RENDERING =====
+    window.openAddReactivoModal = function(sector = 'molecular') {
+        document.getElementById('modal-reactivo-title').textContent = '✨ Nuevo Reactivo / Insumo';
+        document.getElementById('reactivo-id').value = '';
+        document.getElementById('reactivo-nombre').value = '';
+        document.getElementById('reactivo-sector').value = sector || 'molecular';
+        document.getElementById('reactivo-categoria').value = 'Reactivo Químico';
+        document.getElementById('reactivo-formula').value = '';
+        document.getElementById('reactivo-peso').value = '';
+        document.getElementById('reactivo-forma').value = '';
+        document.getElementById('reactivo-cantidad').value = '1';
+        document.getElementById('reactivo-unidad').value = 'frasco';
+        document.getElementById('reactivo-estado').value = 'En uso';
+        document.getElementById('reactivo-ubicacion').value = 'Gabinete Químicos';
+        document.getElementById('reactivo-observaciones').value = '';
+        openModal('modal-reactivo');
+        setTimeout(() => document.getElementById('reactivo-nombre').focus(), 100);
+    };
+
+    window.openEditReactivoModal = function(id) {
+        const r = (window.reactivos || []).find(x => x.id === id);
+        if (!r) return;
+        document.getElementById('modal-reactivo-title').textContent = '✏️ Editar Reactivo';
+        document.getElementById('reactivo-id').value = r.id;
+        document.getElementById('reactivo-nombre').value = r.nombre || '';
+        document.getElementById('reactivo-sector').value = r.sector || 'molecular';
+        document.getElementById('reactivo-categoria').value = r.categoria || 'Reactivo Químico';
+        document.getElementById('reactivo-formula').value = r.formula || '';
+        document.getElementById('reactivo-peso').value = r.pesoMolecular || '';
+        document.getElementById('reactivo-forma').value = r.forma || '';
+        document.getElementById('reactivo-cantidad').value = r.cantidad ?? 1;
+        document.getElementById('reactivo-unidad').value = r.unidad || '';
+        document.getElementById('reactivo-estado').value = r.estado || 'En uso';
+        document.getElementById('reactivo-ubicacion').value = r.ubicacion || '';
+        document.getElementById('reactivo-observaciones').value = r.observaciones || '';
+        openModal('modal-reactivo');
+    };
+
+    window.saveReactivo = async function() {
+        const nombre = document.getElementById('reactivo-nombre').value.trim();
+        if (!nombre) { toast('Escribe el nombre del reactivo o insumo', 'error'); return; }
+
+        const id = document.getElementById('reactivo-id').value;
+        const data = {
+            nombre,
+            sector: document.getElementById('reactivo-sector').value,
+            categoria: document.getElementById('reactivo-categoria').value,
+            formula: document.getElementById('reactivo-formula').value.trim(),
+            pesoMolecular: document.getElementById('reactivo-peso').value.trim(),
+            forma: document.getElementById('reactivo-forma').value.trim(),
+            cantidad: parseFloat(document.getElementById('reactivo-cantidad').value) || 1,
+            unidad: document.getElementById('reactivo-unidad').value.trim(),
+            estado: document.getElementById('reactivo-estado').value,
+            ubicacion: document.getElementById('reactivo-ubicacion').value.trim(),
+            observaciones: document.getElementById('reactivo-observaciones').value.trim(),
+            ultimaModificacion: new Date().toISOString()
+        };
+
+        if (!id) {
+            data.fechaRegistro = new Date().toISOString();
+        }
+
+        if (window.saveReactivoToDB) {
+            const success = await window.saveReactivoToDB(data, id);
+            if (success) closeModal('modal-reactivo');
+        } else {
+            toast('Firebase no está configurado', 'error');
+        }
+    };
+
+    window.deleteReactivo = function(id) {
+        const r = (window.reactivos || []).find(x => x.id === id);
+        if (!r) return;
+        showConfirm('¿Eliminar reactivo?', `"${r.nombre}" se eliminará permanentemente.`, async () => {
+            if (window.deleteReactivoFromDB) {
+                await window.deleteReactivoFromDB(id);
+            }
+        });
+    };
+
+    window.renderReactivosSector = function(sector) {
+        const searchInput = document.getElementById('search-reactivos-' + sector);
+        const q = (searchInput?.value || '').toLowerCase().trim();
+        const filterCat = document.getElementById('filter-cat-' + sector)?.value || '';
+
+        let list = (window.reactivos || []).filter(r => r.sector === sector);
+
+        if (filterCat) {
+            list = list.filter(r => r.categoria === filterCat);
+        }
+
+        if (q) {
+            list = list.filter(r => 
+                (r.nombre || '').toLowerCase().includes(q) ||
+                (r.formula || '').toLowerCase().includes(q) ||
+                (r.categoria || '').toLowerCase().includes(q) ||
+                (r.ubicacion || '').toLowerCase().includes(q) ||
+                (r.forma || '').toLowerCase().includes(q) ||
+                (r.observaciones || '').toLowerCase().includes(q)
+            );
+        }
+
+        const tbody = document.getElementById('tbody-reactivos-' + sector);
+        const empty = document.getElementById('empty-reactivos-' + sector);
+        const container = document.querySelector(`#page-reactivos-${sector} .table-container`);
+        const countEl = document.getElementById('count-reactivos-' + sector);
+
+        if (!tbody) return;
+
+        if (list.length === 0) {
+            tbody.innerHTML = '';
+            if (empty) empty.style.display = 'block';
+            if (container) container.style.display = 'none';
+        } else {
+            if (empty) empty.style.display = 'none';
+            if (container) container.style.display = 'block';
+            if (countEl) countEl.textContent = `${list.length} ítems registrados`;
+
+            tbody.innerHTML = list.map(r => {
+                const catClass = (r.categoria || '').toLowerCase().includes('quím') ? 'quimico' :
+                                 (r.categoria || '').toLowerCase().includes('cong') ? 'congeladora' :
+                                 (r.categoria || '').toLowerCase().includes('kit') ? 'kits' :
+                                 (r.categoria || '').toLowerCase().includes('mat') ? 'materiales' : 'otro';
+
+                const estadoClass = (r.estado || '').toLowerCase().includes('uso') ? 'en-uso' :
+                                    (r.estado || '').toLowerCase().includes('nuev') ? 'nuevo' :
+                                    (r.estado || '').toLowerCase().includes('casi') ? 'casi-nuevo' :
+                                    (r.estado || '').toLowerCase().includes('agot') ? 'agotado' : 'disponible';
+
+                return `
+                    <tr>
+                        <td>
+                            <div style="font-weight: 600; color: var(--text);">${esc(r.nombre)}</div>
+                            ${r.observaciones ? `<div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">${esc(r.observaciones)}</div>` : ''}
+                        </td>
+                        <td><span class="cat-chip ${catClass}">${esc(r.categoria || 'Otro')}</span></td>
+                        <td>${r.formula ? `<code style="background:var(--bg-input); padding:2px 6px; border-radius:4px; font-weight:600; color:var(--primary); font-size:0.85rem;">${esc(r.formula)}</code>` : '<span class="td-muted">—</span>'}</td>
+                        <td class="td-muted">${esc(r.pesoMolecular || '—')}</td>
+                        <td><span style="font-size:0.85rem;">${esc(r.forma || '—')}</span></td>
+                        <td><strong>${esc(r.cantidad ?? 1)}</strong> <span class="td-muted" style="font-size:0.8rem;">${esc(r.unidad || '')}</span></td>
+                        <td><span class="status-chip ${estadoClass}">${esc(r.estado || 'Disponible')}</span></td>
+                        <td><span style="font-size:0.82rem; color:var(--text-secondary);"><span style="opacity:0.7;">📍</span> ${esc(r.ubicacion || 'Laboratorio')}</span></td>
+                        <td>
+                            <div class="actions-cell">
+                                <button class="btn-icon-only edit" title="Editar" onclick="openEditReactivoModal('${r.id}')">✏️</button>
+                                <button class="btn-icon-only delete" title="Eliminar" onclick="deleteReactivo('${r.id}')">🗑️</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+    };
+
+    window.exportReactivosCSV = function(sector) {
+        const list = (window.reactivos || []).filter(r => r.sector === sector);
+        if (!list.length) { toast('No hay reactivos para exportar en este sector', 'warning'); return; }
+        const h = ['Nombre','Sector','Categoría','Fórmula','Peso Molecular','Forma','Cantidad','Unidad','Estado','Ubicación','Observaciones'];
+        const rows = list.map(r => [
+            r.nombre, LABELS[r.sector] || r.sector, r.categoria || '', r.formula || '', r.pesoMolecular || '',
+            r.forma || '', r.cantidad ?? '', r.unidad || '', r.estado || '', r.ubicacion || '', r.observaciones || ''
+        ]);
+        let csv = '\uFEFF' + h.join(';') + '\n';
+        rows.forEach(row => { csv += row.map(v => '"'+String(v).replace(/"/g,'""')+'"').join(';') + '\n'; });
+        const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `reactivos_${sector}_${new Date().toISOString().split('T')[0]}.csv`;
+        a.click(); URL.revokeObjectURL(a.href);
+        toast('CSV de reactivos exportado');
+    };
+
+    let seedingInProgress = false;
+    window.checkAndSeedMolecularReactivos = async function() {
+        if (seedingInProgress || !db) return;
+        const molCount = (window.reactivos || []).filter(r => r.sector === 'molecular').length;
+        if (molCount === 0 && !localStorage.getItem('biogen_reactivos_molecular_seeded_v1')) {
+            seedingInProgress = true;
+            try {
+                const batchSize = 25;
+                for (let i = 0; i < INITIAL_REACTIVOS_MOLECULAR.length; i += batchSize) {
+                    const chunk = INITIAL_REACTIVOS_MOLECULAR.slice(i, i + batchSize);
+                    const batch = db.batch();
+                    chunk.forEach(item => {
+                        const docRef = db.collection("reactivos").doc();
+                        batch.set(docRef, { ...item, fechaRegistro: new Date().toISOString() });
+                    });
+                    await batch.commit();
+                }
+                localStorage.setItem('biogen_reactivos_molecular_seeded_v1', 'true');
+                toast('86 Reactivos de Molecular cargados');
+            } catch (e) {
+                console.error("Error auto-seeding reactivos:", e);
+            } finally {
+                seedingInProgress = false;
+            }
+        }
+    };
+
+    window.forzarCargaReactivosMolecular = async function() {
+        showConfirm('¿Cargar reactivos de Molecular?', 'Se guardarán los 86 reactivos e insumos de las fichas en la base de datos.', async () => {
+            if (!db) { toast('Firebase no disponible', 'error'); return; }
+            try {
+                toast('Cargando 86 reactivos...', 'info');
+                const batchSize = 25;
+                for (let i = 0; i < INITIAL_REACTIVOS_MOLECULAR.length; i += batchSize) {
+                    const chunk = INITIAL_REACTIVOS_MOLECULAR.slice(i, i + batchSize);
+                    const batch = db.batch();
+                    chunk.forEach(item => {
+                        const docRef = db.collection("reactivos").doc();
+                        batch.set(docRef, { ...item, fechaRegistro: new Date().toISOString() });
+                    });
+                    await batch.commit();
+                }
+                localStorage.setItem('biogen_reactivos_molecular_seeded_v1', 'true');
+                toast('86 Reactivos cargados exitosamente');
+            } catch (e) {
+                console.error(e);
+                toast('Error al cargar reactivos', 'error');
+            }
+        }, '📥 Cargar', 'btn-primary');
+    };
 
     // ===== KEYBOARD =====
     document.addEventListener('keydown', e => {
